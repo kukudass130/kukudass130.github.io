@@ -280,42 +280,55 @@
       padding: 5px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      grid-template-rows: 44px 64px 120px 42px;
       gap: 5px;
     }
 
-    #scenePanel {
+    .play-scroll.tab-map {
+      grid-template-rows: 76px 118px minmax(0, 1fr);
+    }
+
+    .play-scroll.tab-inventory {
+      grid-template-rows: 132px minmax(0, 1fr);
+    }
+
+    .play-scroll.tab-info {
+      grid-template-columns: 1fr;
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .play-scroll.tab-map #scenePanel {
       grid-column: 1;
       grid-row: 1;
     }
 
-    #eventPanelCard {
+    .play-scroll.tab-map #eventPanelCard {
       grid-column: 2;
       grid-row: 1;
     }
 
-    #actionPanelCard {
-      grid-column: 1;
+    .play-scroll.tab-map #actionPanelCard {
+      grid-column: 1 / -1;
       grid-row: 2;
     }
 
-    #cookingCard {
-      grid-column: 2;
-      grid-row: 2;
-    }
-
-    #inventoryCard {
+    .play-scroll.tab-map #infoCard {
       grid-column: 1 / -1;
       grid-row: 3;
     }
 
-    #infoCard {
+    .play-scroll.tab-inventory #cookingCard {
       grid-column: 1 / -1;
-      grid-row: 4;
+      grid-row: 1;
     }
 
-    #infoCard .card-title {
-      display: none;
+    .play-scroll.tab-inventory #inventoryCard {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+
+    .play-scroll.tab-info #playerInfoCard {
+      grid-column: 1;
+      grid-row: 1;
     }
 
     .scene {
@@ -396,7 +409,7 @@
       line-height: 1.25;
       color: #3b2a1c;
       margin: 0 0 4px;
-      max-height: 28px;
+      max-height: 42px;
       overflow: hidden;
     }
 
@@ -407,19 +420,20 @@
     }
 
     .action-btn {
-      min-height: 22px;
-      padding: 4px;
-      font-size: 9px;
+      min-height: 34px;
+      padding: 5px 4px;
+      font-size: 10px;
       font-weight: 900;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 0;
+      gap: 2px;
       text-align: center;
     }
 
     .action-cost {
-      display: none;
+      display: inline;
       color: var(--blue);
       font-size: 9px;
     }
@@ -432,9 +446,10 @@
 
     .inventory-wrap {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 142px 1fr;
       gap: 5px;
       align-items: start;
+      height: calc(100% - 21px);
     }
 
     .grid {
@@ -442,6 +457,7 @@
       grid-template-columns: repeat(6, 1fr);
       gap: 2px;
       touch-action: manipulation;
+      align-content: start;
     }
 
     .cell {
@@ -489,6 +505,7 @@
       gap: 4px;
       overflow: hidden;
       padding-bottom: 0;
+      max-height: 72px;
     }
 
     .item-chip {
@@ -589,12 +606,14 @@
       grid-template-columns: 1fr 1fr;
       gap: 5px;
       font-size: 10px;
+      height: calc(100% - 20px);
     }
 
     .cook-list {
       display: grid;
       gap: 3px;
-      max-height: 44px;
+      align-content: start;
+      max-height: 96px;
       overflow: hidden;
     }
 
@@ -622,6 +641,63 @@
     .method-row strong {
       grid-column: 1 / -1;
       font-size: 9px;
+    }
+
+    .player-info {
+      height: calc(100% - 21px);
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .player-summary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .status-tile {
+      border: 2px solid var(--line);
+      border-radius: 7px;
+      background: #fff6dc;
+      padding: 5px;
+      min-width: 0;
+    }
+
+    .status-tile strong {
+      display: block;
+      font-size: 10px;
+      margin-bottom: 2px;
+    }
+
+    .status-tile span {
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .debuff-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      min-height: 24px;
+    }
+
+    .dialogue-log {
+      min-height: 0;
+      display: grid;
+      gap: 4px;
+      align-content: start;
+      overflow: hidden;
+    }
+
+    .dialogue-entry {
+      border: 2px solid rgba(97, 66, 44, 0.45);
+      border-radius: 7px;
+      background: #fff8e6;
+      padding: 5px;
+      font-size: 10px;
+      line-height: 1.25;
     }
 
     .rotate-preview span {
@@ -897,6 +973,14 @@
             </div>
             <div id="checkpointList" class="checkpoint-list"></div>
           </article>
+
+          <article class="card" id="playerInfoCard">
+            <div class="card-title">
+              <span>플레이어 상태</span>
+              <span class="tag">대화 로그</span>
+            </div>
+            <div id="playerInfoPanel" class="player-info"></div>
+          </article>
         </section>
 
         <nav class="phone-bottom" aria-label="하단 메뉴">
@@ -1041,6 +1125,9 @@
           activeGameTab: "map",
           selectedInspectorTab: "status",
           logs: [],
+          dialogueLogs: [
+            "아직 기록된 대화가 없다. 조우나 협상 행동 결과가 여기에 남는다."
+          ],
           modalOpen: false,
           death: null
         }
@@ -1083,6 +1170,11 @@
         payload
       });
       window.state.ui.logs = window.state.ui.logs.slice(0, 80);
+    }
+
+    function dialogue(text) {
+      window.state.ui.dialogueLogs.unshift(`[${nowLabel()}] ${text}`);
+      window.state.ui.dialogueLogs = window.state.ui.dialogueLogs.slice(0, 12);
     }
 
     function getAllItems() {
@@ -1298,12 +1390,14 @@
       const second = window.state.tower.checkpoints[1];
       if (!first.found && steps >= 2) {
         first.found = true;
+        dialogue(`체크포인트 발견: 1층 ${first.name}.`);
         log("ACTION", "CHECKPOINT_FOUND", `1층: ${first.name}`);
       }
       if (steps >= 4) window.state.tower.floor = 2;
       if (!second.found && steps >= 6) {
         second.found = true;
         window.state.tower.floor = 2;
+        dialogue(`체크포인트 발견: 2층 ${second.name}.`);
         log("ACTION", "CHECKPOINT_FOUND", `2층: ${second.name}`);
       }
     }
@@ -1320,6 +1414,7 @@
         text: "가방에서 재료를 꺼내 조리대에 올리고 요리 시작을 누른다.",
         tbd: true
       };
+      window.state.ui.activeGameTab = "inventory";
       log("ACTION", "OPEN_COOKING_BENCH", "재료 선택 단계");
     }
 
@@ -1380,6 +1475,7 @@
       };
       recalcDebuffs();
       log("TBD", "FINISH_COOKING", `${dishName}: 허기 회복. 조합 공식 [TBD]`);
+      dialogue(`요리 완성: ${dishName}. 최종 조합 공식은 [TBD].`);
       render();
     }
 
@@ -1433,6 +1529,7 @@
         window.state.combat.enemy = picked.title;
         window.state.ui.activeGameTab = "map";
         window.state.combat.log.unshift(`${picked.title}와 전투 돌입`);
+        dialogue(`전투 돌입: ${picked.title}. 하단 첫 탭이 전투 탭으로 바뀌었다.`);
         log("ACTION", "ENTER_COMBAT_TAB", "하단 이동맵 탭이 전투 탭으로 전환");
       }
     }
@@ -1450,6 +1547,7 @@
       }
       if (event.type === "조우") {
         window.state.survival.thirst = clamp(window.state.survival.thirst - 10, 0, maxStat);
+        dialogue(`${event.title}: 대화와 거래 결과로 갈증을 조금 해소했다.`);
         log("TBD", "DIALOG_FORMULA_USED", "갈증 -10. 대화 실패 공식 [TBD]");
       }
       if (event.type === "기연") {
@@ -1488,11 +1586,14 @@
       } else if (event.type === "조우") {
         if (action.id === "trade") {
           window.state.survival.thirst = clamp(window.state.survival.thirst - 15, 0, maxStat);
+          dialogue(`${event.title}: 거래로 물과 길 정보를 얻었다. 가격 공식은 [TBD].`);
           log("TBD", "ENCOUNTER_TRADE", "거래 결과: 갈증 -15. 가격/협상 공식 [TBD]");
         } else if (action.id === "talk") {
+          dialogue(`${event.title}: 다음 체크포인트 단서를 들었다. 대화 누락 공식은 [TBD].`);
           log("TBD", "ENCOUNTER_TALK", "정보 획득. 대화 누락 공식 [TBD]");
         } else {
           window.state.survival.fatigue = clamp(window.state.survival.fatigue + 5, 0, maxStat);
+          dialogue(`${event.title}: 말을 길게 섞지 않고 지나쳤다.`);
           log("ACTION", "ENCOUNTER_LEAVE", "충돌을 피하고 지나감. 피로도 +5");
         }
       } else if (event.type === "기연") {
@@ -1613,6 +1714,7 @@
       renderCooking();
       renderInventory();
       renderCheckpoints();
+      renderPlayerInfo();
       renderBottomTabs();
       renderGameTabVisibility();
       renderLogs();
@@ -1631,12 +1733,28 @@
     }
 
     function renderGameTabVisibility() {
-      document.getElementById("scenePanel").style.display = "";
-      document.getElementById("eventPanelCard").style.display = "";
-      document.getElementById("actionPanelCard").style.display = "";
-      document.getElementById("cookingCard").style.display = "";
-      document.getElementById("inventoryCard").style.display = "";
-      document.getElementById("infoCard").style.display = "";
+      const tab = window.state.ui.activeGameTab;
+      const play = document.querySelector(".play-scroll");
+      play.classList.toggle("tab-map", tab === "map");
+      play.classList.toggle("tab-inventory", tab === "inventory");
+      play.classList.toggle("tab-info", tab === "info");
+      const visibleByTab = {
+        map: ["scenePanel", "eventPanelCard", "actionPanelCard", "infoCard"],
+        inventory: ["cookingCard", "inventoryCard"],
+        info: ["playerInfoCard"]
+      };
+      const visible = new Set(visibleByTab[tab] || visibleByTab.map);
+      [
+        "scenePanel",
+        "eventPanelCard",
+        "actionPanelCard",
+        "cookingCard",
+        "inventoryCard",
+        "infoCard",
+        "playerInfoCard"
+      ].forEach(id => {
+        document.getElementById(id).style.display = visible.has(id) ? "" : "none";
+      });
     }
 
     function renderHud() {
@@ -1677,6 +1795,26 @@
       `;
     }
 
+    function renderPlayerInfo() {
+      const survival = window.state.survival;
+      const debuffs = survival.debuffs.length
+        ? survival.debuffs.map(name => `<span class="danger-badge">${name}</span>`).join("")
+        : `<span class="tag">상태 안정</span>`;
+      const dialogues = window.state.ui.dialogueLogs.slice(0, 5).map(text => `
+        <div class="dialogue-entry">${text}</div>
+      `).join("");
+      document.getElementById("playerInfoPanel").innerHTML = `
+        <div class="player-summary">
+          <div class="status-tile"><strong>시간/행동력</strong><span>${window.state.time.day}일 ${window.state.time.phase} · ${window.state.time.actionPoints}/${window.state.time.maxActionPoints}</span></div>
+          <div class="status-tile"><strong>현재 위치</strong><span>${window.state.location.currentNode}</span></div>
+          <div class="status-tile"><strong>허기/갈증</strong><span>${survival.hunger}/${maxStat} · ${survival.thirst}/${maxStat}</span></div>
+          <div class="status-tile"><strong>피로/위험</strong><span>${survival.fatigue}/${maxStat} · H${survival.hungerDangerTurns}/12 T${survival.thirstDangerTurns}/8</span></div>
+        </div>
+        <div class="debuff-panel">${debuffs}</div>
+        <div class="dialogue-log">${dialogues}</div>
+      `;
+    }
+
     function renderEvent() {
       const event = window.state.events.current;
       const badge = document.getElementById("eventTypeBadge");
@@ -1695,6 +1833,7 @@
       const label = method === "attack" ? "공격" : method === "negotiate" ? "위협/협상" : "도주";
       const event = window.state.events.current;
       window.state.combat.log.unshift(`${label}으로 전투를 마무리했다. 전투 공식 [TBD]`);
+      dialogue(`전투 결과: ${label}으로 상황을 마무리했다. 전투/협상 공식은 [TBD].`);
       if (method === "retreat") {
         window.state.survival.fatigue = clamp(window.state.survival.fatigue + 15, 0, maxStat);
         log("TBD", "COMBAT_RETREAT", "도주: 피로도 +15. 추격/손실 공식 [TBD]");
