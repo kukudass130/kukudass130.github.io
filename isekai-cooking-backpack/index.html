@@ -1,0 +1,1791 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>이세계 배낭 요리 - HTML 프로토타입</title>
+  <style>
+    :root {
+      --bg: #2b241d;
+      --panel: #fff0d2;
+      --panel-strong: #f5c979;
+      --ink: #2f2117;
+      --muted: #7b634d;
+      --line: #61422c;
+      --danger: #b73535;
+      --warn: #d98721;
+      --ok: #3f7f54;
+      --blue: #37678f;
+      --violet: #69518f;
+      --cell: #f8dfab;
+      --cell-dark: #d9a95d;
+      --shadow: rgba(20, 12, 5, 0.42);
+      --radius: 8px;
+      --font: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+        var(--bg);
+      background-size: 16px 16px;
+      color: var(--ink);
+      font-family: var(--font);
+      overflow: hidden;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 2px solid var(--line);
+      border-radius: 6px;
+      background: #f7d889;
+      color: var(--ink);
+      min-height: 36px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #7a5130;
+    }
+
+    button:hover {
+      filter: brightness(1.04);
+    }
+
+    button:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #7a5130;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: minmax(260px, 330px) minmax(360px, 420px) minmax(300px, 380px);
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 16px;
+    }
+
+    .app.fullscreen {
+      grid-template-columns: minmax(360px, 430px);
+    }
+
+    .app.fullscreen .side {
+      display: none;
+    }
+
+    .side {
+      height: min(92vh, 830px);
+      background: var(--panel);
+      border: 3px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 0 var(--shadow);
+      overflow: hidden;
+    }
+
+    .side-header,
+    .phone-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--panel-strong);
+      border-bottom: 3px solid var(--line);
+    }
+
+    .side-title,
+    .game-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .small-btn {
+      min-height: 30px;
+      padding: 4px 8px;
+      font-size: 12px;
+      box-shadow: 0 2px 0 #7a5130;
+    }
+
+    .log-list {
+      height: calc(100% - 53px);
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .log-entry {
+      border: 2px solid rgba(97, 66, 44, 0.32);
+      border-radius: 6px;
+      padding: 8px;
+      background: rgba(255,255,255,0.5);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .log-entry .meta {
+      display: block;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+
+    .log-entry.ERROR {
+      border-color: var(--danger);
+      background: #ffe0dc;
+    }
+
+    .log-entry.TBD {
+      border-color: var(--warn);
+      background: #fff4cf;
+    }
+
+    .phone-shell {
+      width: min(100%, 393px);
+      aspect-ratio: 9 / 19.5;
+      max-height: 94vh;
+      background: #15110e;
+      border: 8px solid #120d0b;
+      border-radius: 28px;
+      padding: 10px;
+      box-shadow: 0 18px 0 var(--shadow), inset 0 0 0 2px #3d3127;
+    }
+
+    .phone {
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 3px solid var(--line);
+      background: #f9e6bb;
+      position: relative;
+    }
+
+    .phone-top {
+      padding: 8px 10px;
+    }
+
+    .phase-chip,
+    .tbd-badge,
+    .danger-badge,
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      border: 2px solid var(--line);
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .phase-chip {
+      background: #e9a951;
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+
+    .tbd-badge {
+      background: #fff1b8;
+      color: #8a4d08;
+      border-color: var(--warn);
+      padding: 4px 6px;
+      font-size: 11px;
+    }
+
+    .danger-badge {
+      background: #ffd7d7;
+      color: var(--danger);
+      border-color: var(--danger);
+      padding: 4px 6px;
+      font-size: 11px;
+    }
+
+    .tag {
+      background: #e6c980;
+      padding: 4px 7px;
+      font-size: 11px;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      padding: 8px;
+      background: #f0c775;
+      border-bottom: 3px solid var(--line);
+    }
+
+    .meter {
+      min-width: 0;
+      border: 2px solid var(--line);
+      border-radius: 6px;
+      background: #fff1cb;
+      padding: 5px;
+    }
+
+    .meter-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .bar {
+      height: 10px;
+      border: 2px solid var(--line);
+      background: #f8e7c3;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--ok);
+      width: 0;
+    }
+
+    .bar-fill.warn {
+      background: var(--warn);
+    }
+
+    .bar-fill.danger {
+      background: var(--danger);
+    }
+
+    .play-scroll {
+      min-height: 0;
+      overflow-y: auto;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .scene {
+      min-height: 122px;
+      border: 3px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.16), transparent),
+        #d99055;
+      position: relative;
+      overflow: hidden;
+      padding: 10px;
+    }
+
+    .scene::before {
+      content: "";
+      position: absolute;
+      inset: 45% -20px auto -20px;
+      height: 80px;
+      background:
+        linear-gradient(135deg, #7b8b50 25%, transparent 25%) 0 0 / 28px 28px,
+        linear-gradient(225deg, #8fa45d 25%, transparent 25%) 0 0 / 28px 28px,
+        #9bb46a;
+      transform: skewY(-7deg);
+      border-top: 3px solid rgba(97,66,44,0.55);
+    }
+
+    .scene-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 92%;
+    }
+
+    .scene h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .scene p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #3b2a1c;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .card {
+      border: 3px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 8px;
+    }
+
+    .card-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .event-text {
+      font-size: 12px;
+      line-height: 1.5;
+      color: #3b2a1c;
+      margin: 0 0 8px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .action-btn {
+      padding: 7px 5px;
+      font-size: 12px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .action-cost {
+      color: var(--blue);
+      font-size: 11px;
+    }
+
+    .inventory-wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 3px;
+      touch-action: manipulation;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      border: 2px solid #936233;
+      background: var(--cell);
+      border-radius: 4px;
+      position: relative;
+      min-width: 0;
+    }
+
+    .cell:hover {
+      outline: 2px solid var(--blue);
+      outline-offset: 1px;
+    }
+
+    .cell.occupied {
+      background: var(--cell-dark);
+    }
+
+    .cell.origin::after {
+      content: attr(data-label);
+      position: absolute;
+      inset: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 900;
+      color: #2a1c12;
+      overflow: hidden;
+      line-height: 1.15;
+      word-break: keep-all;
+    }
+
+    .cell.selected {
+      outline: 3px solid var(--violet);
+      outline-offset: -2px;
+    }
+
+    .pending-list {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .item-chip {
+      flex: 0 0 auto;
+      border: 2px solid var(--line);
+      border-radius: 7px;
+      background: #ffe7aa;
+      min-width: 96px;
+      padding: 6px;
+      cursor: pointer;
+    }
+
+    .item-chip.active {
+      background: #dbcfef;
+      border-color: var(--violet);
+    }
+
+    .item-chip strong {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .item-chip span {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .phone-bottom {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+      padding: 8px;
+      background: #d99d5c;
+      border-top: 3px solid var(--line);
+    }
+
+    .phone-bottom button {
+      min-height: 34px;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 4px;
+    }
+
+    .phone-bottom button.active {
+      background: #cfe2b0;
+    }
+
+    .checkpoint-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .checkpoint {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 7px;
+      align-items: center;
+      border: 2px solid var(--line);
+      border-radius: 7px;
+      background: #fff6dc;
+      padding: 7px;
+      font-size: 12px;
+    }
+
+    .checkpoint.found {
+      background: #d9edbf;
+    }
+
+    .rotate-preview {
+      display: grid;
+      grid-template-columns: repeat(4, 14px);
+      grid-auto-rows: 14px;
+      gap: 2px;
+      margin-top: 5px;
+    }
+
+    .rotate-preview span {
+      border: 1px solid var(--line);
+      background: transparent;
+      border-radius: 2px;
+    }
+
+    .rotate-preview span.on {
+      background: var(--cell-dark);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      padding: 8px;
+      background: #e7be71;
+      border-bottom: 3px solid var(--line);
+    }
+
+    .tab {
+      min-height: 31px;
+      box-shadow: none;
+      background: #f6dea3;
+      font-size: 12px;
+      padding: 3px;
+    }
+
+    .tab.active {
+      background: #cfe2b0;
+    }
+
+    .inspector-body {
+      height: calc(100% - 96px);
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 9px;
+    }
+
+    .field {
+      display: grid;
+      gap: 4px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 2px solid var(--line);
+      border-radius: 6px;
+      background: #fff8e6;
+      color: var(--ink);
+      padding: 7px;
+      min-height: 34px;
+    }
+
+    .field textarea {
+      min-height: 72px;
+      resize: vertical;
+    }
+
+    .table-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .event-row {
+      border: 2px solid var(--line);
+      border-radius: 7px;
+      background: #fff6dc;
+      padding: 8px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .event-row header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .empty {
+      border: 2px dashed rgba(97,66,44,0.6);
+      border-radius: 7px;
+      color: var(--muted);
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.45;
+      background: rgba(255,255,255,0.35);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 20;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(560px, 100%);
+      max-height: 80vh;
+      overflow-y: auto;
+      background: var(--panel);
+      border: 4px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 16px 0 rgba(0,0,0,0.35);
+      padding: 14px;
+    }
+
+    .modal h2 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .modal ul {
+      padding-left: 20px;
+      margin: 8px 0 12px;
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    .death {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      background: rgba(30, 12, 8, 0.88);
+      color: #ffe7bd;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 22px;
+    }
+
+    .death.show {
+      display: flex;
+    }
+
+    .death h2 {
+      margin: 0 0 8px;
+      color: #ffd173;
+    }
+
+    @media (max-width: 1120px) {
+      body {
+        overflow: auto;
+      }
+
+      .app {
+        height: auto;
+        min-height: 100vh;
+        grid-template-columns: minmax(340px, 393px);
+        align-items: start;
+      }
+
+      .side {
+        width: min(100%, 393px);
+        height: 360px;
+        order: 2;
+      }
+
+      .phone-shell {
+        order: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="app" class="app">
+    <aside class="side" aria-label="로그창">
+      <header class="side-header">
+        <h1 class="side-title">탐사 로그</h1>
+        <button class="small-btn" type="button" id="clearLogs">비우기</button>
+      </header>
+      <div id="logList" class="log-list"></div>
+    </aside>
+
+    <section class="phone-shell" aria-label="갤럭시 S22 기준 모바일 플레이 화면">
+      <div class="phone">
+        <div class="death" id="deathOverlay">
+          <div>
+            <h2>생존 실패</h2>
+            <p id="deathReason"></p>
+            <button type="button" id="resetGame">처음 상태로</button>
+          </div>
+        </div>
+
+        <header class="phone-top">
+          <h1 class="game-title">이세계 배낭 요리</h1>
+          <span id="phaseChip" class="phase-chip"></span>
+        </header>
+
+        <section id="survivalHud" class="hud" aria-label="생존 HUD"></section>
+
+        <section class="play-scroll">
+          <article class="scene" id="scenePanel">
+            <div class="scene-content">
+              <h2 id="locationName"></h2>
+              <p id="locationMood"></p>
+              <div id="debuffBadges" class="status-row"></div>
+            </div>
+          </article>
+
+          <article class="card" id="eventPanelCard">
+            <div class="card-title">
+              <span>현재 이벤트</span>
+              <span id="eventTypeBadge" class="tbd-badge">[TBD]</span>
+            </div>
+            <p id="eventText" class="event-text"></p>
+            <div id="eventChoices" class="actions"></div>
+          </article>
+
+          <article class="card" id="actionPanelCard">
+            <div class="card-title">
+              <span>행동 선택</span>
+              <span class="tag">AP 1 = 1시간</span>
+            </div>
+            <div id="actionButtons" class="actions"></div>
+            <button class="small-btn" type="button" id="advancePhase" style="width:100%; margin-top:8px;">현재 자리에서 턴 넘기기</button>
+          </article>
+
+          <article class="card" id="inventoryCard">
+            <div class="card-title">
+              <span>이세계 배낭</span>
+              <span class="tbd-badge">격자 6x8 [TBD]</span>
+            </div>
+            <div class="inventory-wrap">
+              <div id="inventoryGrid" class="grid" aria-label="배낭 격자"></div>
+              <div>
+                <div class="card-title">
+                  <span>미배치 획득품</span>
+                  <span class="tbd-badge">작은 블록 확률 우대 [TBD]</span>
+                </div>
+                <div id="pendingItems" class="pending-list"></div>
+                <button class="small-btn" type="button" onclick="rotateSelectedItem()" style="width:100%; margin-top:6px;">선택 아이템 회전</button>
+                <div id="rotationPreview" class="rotate-preview" aria-label="선택 아이템 회전 미리보기"></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" id="infoCard">
+            <div class="card-title">
+              <span>탑 체크포인트</span>
+              <span class="tag">1층/2층 프로토타입</span>
+            </div>
+            <div id="checkpointList" class="checkpoint-list"></div>
+          </article>
+        </section>
+
+        <nav class="phone-bottom" aria-label="하단 메뉴">
+          <button type="button" id="primaryGameTab">탐사맵</button>
+          <button type="button" id="inventoryGameTab">배낭</button>
+          <button type="button" id="infoGameTab">정보</button>
+          <button type="button" id="toggleFullscreen">전체</button>
+          <button type="button" id="showTbd">TBD 보기</button>
+        </nav>
+      </div>
+    </section>
+
+    <aside class="side" aria-label="인스펙터 창">
+      <header class="side-header">
+        <h1 class="side-title">인스펙터</h1>
+        <span class="tbd-badge">실시간 편집</span>
+      </header>
+      <nav id="tabs" class="tabs"></nav>
+      <div id="inspectorBody" class="inspector-body"></div>
+    </aside>
+  </main>
+
+  <div id="tbdModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="tbdTitle">
+    <div class="modal">
+      <h2 id="tbdTitle">미확정 기획 항목</h2>
+      <ul>
+        <li>이벤트 확률, 보상, 손실 범위는 임시값 [TBD]</li>
+        <li>허약/어지럼증의 전투 및 대화 공식은 임시값 [TBD]</li>
+        <li>배낭 격자 크기와 아이템 등장 확률은 임시값 [TBD], 아이템 회전은 허용</li>
+        <li>온도 전파, 부패, 신선도 감소, 시너지는 후순위 [TBD]</li>
+        <li>요리 실패/대성공은 온도 시스템 구현 후 도입 [TBD]</li>
+        <li>탑은 프로토타입에서 1층과 2층 체크포인트만 구현</li>
+      </ul>
+      <button type="button" id="closeTbd">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    const phases = ["아침", "점심", "저녁", "새벽"];
+    const maxStat = 100;
+    const dangerLine = 60;
+
+    const shapeLibrary = {
+      single: [[0, 0]],
+      domino: [[0, 0], [1, 0]],
+      tri: [[0, 0], [1, 0], [0, 1]],
+      square: [[0, 0], [1, 0], [0, 1], [1, 1]],
+      line3: [[0, 0], [1, 0], [2, 0]],
+      l4: [[0, 0], [0, 1], [0, 2], [1, 2]]
+    };
+
+    function makeInitialState() {
+      return {
+        time: { day: 1, phase: "아침", actionPoints: 6, maxActionPoints: 6 },
+        survival: {
+          hunger: 35,
+          thirst: 30,
+          fatigue: 20,
+          hungerDangerTurns: 0,
+          thirstDangerTurns: 0,
+          debuffs: []
+        },
+        location: {
+          currentNode: "무너진 시장 입구",
+          mood: "따뜻한 먼지 냄새 사이로 낯선 향신료와 금속 냄새가 섞여 있다.",
+          steps: 0
+        },
+        tower: {
+          floor: 1,
+          checkpoints: [
+            { floor: 1, name: "무너진 시장 체크포인트", found: false, requirement: "탐사 2회" },
+            { floor: 2, name: "젖은 버섯 정원 체크포인트", found: false, requirement: "탐사 6회" }
+          ]
+        },
+        combat: {
+          active: false,
+          enemy: null,
+          log: []
+        },
+        events: {
+          current: null,
+          table: [
+            {
+              id: "combat",
+              type: "전투",
+              chance: 30,
+              title: "그을린 식재료 약탈자",
+              text: "부서진 노점 뒤에서 누군가 배낭을 노리고 다가온다. 전투 공식은 임시값이다.",
+              reward: "차원 당근 또는 낡은 냄비 [TBD]",
+              tbd: true
+            },
+            {
+              id: "encounter",
+              type: "조우",
+              chance: 25,
+              title: "물장수의 짧은 거래",
+              text: "목이 쉰 상인이 작은 물주머니를 내민다. 대화 페널티 공식은 아직 확정되지 않았다.",
+              reward: "물주머니, 정보, 또는 거래 실패 [TBD]",
+              tbd: true
+            },
+            {
+              id: "fortune",
+              type: "기연",
+              chance: 15,
+              title: "빛나는 전송석 파편",
+              text: "희미한 포털 자국에서 아직 따뜻한 이세계 재료가 튀어나온다.",
+              reward: "희귀 재료 [TBD]",
+              tbd: true
+            },
+            {
+              id: "discovery",
+              type: "발견",
+              chance: 30,
+              title: "뒤집힌 급수차",
+              text: "반쯤 말라붙은 급수차 아래에서 쓸 만한 물과 재료를 찾았다.",
+              reward: "물주머니 또는 말린 고기 [TBD]",
+              tbd: true
+            }
+          ]
+        },
+        inventory: {
+          grid: { cols: 6, rows: 8 },
+          placedItems: [
+            makeItem("starter-pot", "낡은 냄비", "도구", "square", 18, 100, "요리 행동력 임시값 [TBD]", 0, 0)
+          ],
+          pendingItems: [
+            makeItem("starter-carrot", "차원 당근", "식재료", "domino", 22, 92, "온도/신선도 공식 후순위 [TBD]"),
+            makeItem("starter-water", "작은 물주머니", "소모품", "single", 12, 100, "사용 시 갈증 -30")
+          ],
+          selectedItemId: "starter-carrot"
+        },
+        cooking: {
+          selectedRecipe: "묽은 차원 스튜",
+          selectedTool: "낡은 냄비",
+          recipes: [
+            { name: "묽은 차원 스튜", apCost: 3, effect: "허기 -25 [TBD]", tbd: true },
+            { name: "바삭한 포털 구이", apCost: 4, effect: "허기 -35, 피로 +10 [TBD]", tbd: true }
+          ],
+          tools: ["낡은 냄비", "검게 탄 팬", "돌절구 [TBD]"]
+        },
+        ui: {
+          fullscreen: false,
+          activeGameTab: "map",
+          selectedInspectorTab: "status",
+          logs: [],
+          modalOpen: false,
+          death: null
+        }
+      };
+    }
+
+    function makeItem(id, name, type, shape, temp, freshness, note, x = null, y = null) {
+      return {
+        id,
+        name,
+        type,
+        shape,
+        rotation: 0,
+        temp,
+        freshness,
+        note,
+        x,
+        y,
+        tbd: true
+      };
+    }
+
+    window.state = makeInitialState();
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, Number(value) || 0));
+    }
+
+    function nowLabel() {
+      const d = new Date();
+      return d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    }
+
+    function log(type, eventName, payload) {
+      window.state.ui.logs.unshift({
+        id: `${Date.now()}-${Math.random()}`,
+        time: nowLabel(),
+        type,
+        eventName,
+        payload
+      });
+      window.state.ui.logs = window.state.ui.logs.slice(0, 80);
+    }
+
+    function getAllItems() {
+      return [...window.state.inventory.placedItems, ...window.state.inventory.pendingItems];
+    }
+
+    function getSelectedItem() {
+      const id = window.state.inventory.selectedItemId;
+      return getAllItems().find(item => item.id === id) || null;
+    }
+
+    function rotatedShape(shape, rotation) {
+      let cells = shapeLibrary[shape].map(([x, y]) => [x, y]);
+      const turns = ((Number(rotation) || 0) / 90) % 4;
+      for (let i = 0; i < turns; i += 1) {
+        cells = cells.map(([x, y]) => [y, -x]);
+        const minX = Math.min(...cells.map(([x]) => x));
+        const minY = Math.min(...cells.map(([, y]) => y));
+        cells = cells.map(([x, y]) => [x - minX, y - minY]);
+      }
+      return cells;
+    }
+
+    function itemCells(item, x = item.x, y = item.y) {
+      return rotatedShape(item.shape, item.rotation).map(([dx, dy]) => ({ x: x + dx, y: y + dy }));
+    }
+
+    function findItemAt(x, y) {
+      return window.state.inventory.placedItems.find(item =>
+        itemCells(item).some(cell => cell.x === x && cell.y === y)
+      );
+    }
+
+    function canPlace(item, x, y) {
+      const cols = window.state.inventory.grid.cols;
+      const rows = window.state.inventory.grid.rows;
+      const cells = itemCells(item, x, y);
+      if (cells.some(cell => cell.x < 0 || cell.y < 0 || cell.x >= cols || cell.y >= rows)) {
+        return false;
+      }
+      return !window.state.inventory.placedItems.some(placed =>
+        itemCells(placed).some(a => cells.some(b => a.x === b.x && a.y === b.y))
+      );
+    }
+
+    function placeSelectedItem(x, y) {
+      const selected = getSelectedItem();
+      if (!selected) {
+        log("ERROR", "NO_ITEM_SELECTED", "배치할 미배치 아이템을 먼저 선택해야 합니다.");
+        render();
+        return;
+      }
+      if (!window.state.inventory.pendingItems.some(item => item.id === selected.id)) {
+        const placed = findItemAt(x, y);
+        if (placed) {
+          window.state.inventory.selectedItemId = placed.id;
+          log("ACTION", "SELECT_PLACED_ITEM", placed.name);
+        }
+        render();
+        return;
+      }
+      if (!canPlace(selected, x, y)) {
+        log("ERROR", "BAG_SLOT_BLOCKED", `${selected.name} 배치 실패. 회전/초과 처리 규칙 [TBD]`);
+        render();
+        return;
+      }
+      selected.x = x;
+      selected.y = y;
+      window.state.inventory.pendingItems = window.state.inventory.pendingItems.filter(item => item.id !== selected.id);
+      window.state.inventory.placedItems.push(selected);
+      log("ACTION", "PLACE_ITEM", `${selected.name} -> (${x + 1}, ${y + 1})`);
+      render();
+    }
+
+    function rotateSelectedItem() {
+      const selected = getSelectedItem();
+      if (!selected) {
+        log("ERROR", "NO_ITEM_SELECTED", "회전할 아이템을 먼저 선택해야 합니다.");
+        render();
+        return;
+      }
+      selected.rotation = (selected.rotation + 90) % 360;
+      if (window.state.inventory.placedItems.some(item => item.id === selected.id)) {
+        selected.x = null;
+        selected.y = null;
+        window.state.inventory.placedItems = window.state.inventory.placedItems.filter(item => item.id !== selected.id);
+        window.state.inventory.pendingItems.push(selected);
+        window.state.inventory.selectedItemId = selected.id;
+        log("ACTION", "ROTATE_PLACED_ITEM", `${selected.name} ${selected.rotation}도. 재배치 필요`);
+      } else {
+        log("ACTION", "ROTATE_PENDING_ITEM", `${selected.name} ${selected.rotation}도`);
+      }
+      render();
+    }
+
+    function recalcDebuffs() {
+      const debuffs = [];
+      if (window.state.survival.hunger >= dangerLine) debuffs.push("허약");
+      if (window.state.survival.thirst >= dangerLine) debuffs.push("어지럼증");
+      if (window.state.survival.fatigue >= dangerLine) debuffs.push("피로 위험 [TBD]");
+      window.state.survival.debuffs = debuffs;
+    }
+
+    function advancePhase(reason = "수동 턴 넘기기") {
+      const phaseIndex = phases.indexOf(window.state.time.phase);
+      const wasDawn = phaseIndex === phases.length - 1;
+      window.state.time.phase = phases[(phaseIndex + 1) % phases.length];
+      window.state.time.actionPoints = window.state.time.maxActionPoints;
+      window.state.survival.hunger = clamp(window.state.survival.hunger + 30, 0, maxStat);
+      window.state.survival.thirst = clamp(window.state.survival.thirst + 30, 0, maxStat);
+      window.state.survival.fatigue = clamp(window.state.survival.fatigue + 30, 0, maxStat);
+      recalcDebuffs();
+      updateDangerTurnsAtPhaseEnd();
+      if (wasDawn) window.state.time.day += 1;
+      log("ACTION", "ADVANCE_PHASE", `${reason}. 허기/갈증/피로도 +30`);
+      checkDeath();
+      render();
+    }
+
+    function updateDangerTurnsAtPhaseEnd() {
+      const survival = window.state.survival;
+      survival.hungerDangerTurns = survival.hunger >= dangerLine ? survival.hungerDangerTurns + 1 : 0;
+      survival.thirstDangerTurns = survival.thirst >= dangerLine ? survival.thirstDangerTurns + 1 : 0;
+      log("ACTION", "DANGER_TURN_COUNT", `위험 도달 턴 포함 계산. 허기 ${survival.hungerDangerTurns}/12, 갈증 ${survival.thirstDangerTurns}/8`);
+    }
+
+    function checkDeath() {
+      const survival = window.state.survival;
+      if (survival.hungerDangerTurns >= 12) {
+        window.state.ui.death = "허기 위험 지속 12턴이 지나 사망했습니다.";
+        log("ERROR", "DEATH_HUNGER", window.state.ui.death);
+      }
+      if (survival.thirstDangerTurns >= 8) {
+        window.state.ui.death = "갈증 위험 지속 8턴이 지나 사망했습니다.";
+        log("ERROR", "DEATH_THIRST", window.state.ui.death);
+      }
+    }
+
+    function spendAction(cost, actionName) {
+      if (window.state.ui.death) return false;
+      if (window.state.time.actionPoints < cost) {
+        log("ERROR", "INSUFFICIENT_AP", `${actionName}에는 행동력 ${cost}가 필요합니다.`);
+        render();
+        return false;
+      }
+      window.state.time.actionPoints -= cost;
+      log("ACTION", "SPEND_AP", `${actionName}: 행동력 -${cost}`);
+      return true;
+    }
+
+    function performAction(kind) {
+      const actions = {
+        forward: { label: "전진", cost: 2 },
+        left: { label: "왼쪽길", cost: 2 },
+        right: { label: "오른쪽길", cost: 2 },
+        camp: { label: "야영", cost: 6 },
+        cook: { label: "요리", cost: currentRecipe().apCost },
+        bag: { label: "가방 정리", cost: 0 }
+      };
+      const action = actions[kind];
+      if (!spendAction(action.cost, action.label)) return;
+
+      if (kind === "camp") {
+        window.state.survival.fatigue = 0;
+        recalcDebuffs();
+        window.state.events.current = {
+          type: "야영",
+          title: "짧은 숨 고르기",
+          text: "배낭을 베개 삼아 쉰다. 피로도만 0으로 초기화된다.",
+          tbd: false
+        };
+        log("ACTION", "CAMP_REST", "피로도 0");
+      } else if (kind === "cook") {
+        const recipe = currentRecipe();
+        window.state.survival.hunger = clamp(window.state.survival.hunger - 25, 0, maxStat);
+        recalcDebuffs();
+        window.state.events.current = {
+          type: "요리",
+          title: recipe.name,
+          text: `${recipe.effect}. 조리 과정과 실패/대성공은 후순위다.`,
+          tbd: true
+        };
+        log("TBD", "COOKING_RULE_USED", `${recipe.name}: ${recipe.effect}`);
+      } else if (kind === "bag") {
+        window.state.ui.activeGameTab = "inventory";
+        window.state.events.current = {
+          type: "정리",
+          title: "배낭 정리",
+          text: "미배치 획득품을 선택하고 회전한 뒤 격자를 눌러 배치한다.",
+          tbd: true
+        };
+        log("ACTION", "BAG_RULE_USED", "아이템 회전 가능. 온도/시너지 후순위 [TBD]");
+      } else {
+        window.state.location.steps += 1;
+        window.state.location.currentNode = nextLocationName(kind);
+        window.state.location.mood = nextMood(kind);
+        updateCheckpoints();
+        rollEvent(kind);
+      }
+
+      if (window.state.time.actionPoints <= 0) {
+        advancePhase("행동력 0 도달");
+        return;
+      }
+      render();
+    }
+
+    function updateCheckpoints() {
+      const steps = window.state.location.steps;
+      const first = window.state.tower.checkpoints[0];
+      const second = window.state.tower.checkpoints[1];
+      if (!first.found && steps >= 2) {
+        first.found = true;
+        log("ACTION", "CHECKPOINT_FOUND", `1층: ${first.name}`);
+      }
+      if (steps >= 4) window.state.tower.floor = 2;
+      if (!second.found && steps >= 6) {
+        second.found = true;
+        window.state.tower.floor = 2;
+        log("ACTION", "CHECKPOINT_FOUND", `2층: ${second.name}`);
+      }
+    }
+
+    function currentRecipe() {
+      return window.state.cooking.recipes.find(recipe => recipe.name === window.state.cooking.selectedRecipe) || window.state.cooking.recipes[0];
+    }
+
+    function nextLocationName(kind) {
+      const names = {
+        forward: ["깨진 육교 아래", "말라붙은 분수 광장", "붉은 포털 잔해"],
+        left: ["왼편 버섯 골목", "그늘진 조리도구 상가", "낮은 전송석 울타리"],
+        right: ["오른편 급수차 길", "향신료 먼지길", "반쯤 열린 식량 창고"]
+      };
+      const list = names[kind] || names.forward;
+      return list[window.state.location.steps % list.length];
+    }
+
+    function nextMood(kind) {
+      const mood = {
+        forward: "멀리서 탑의 그림자가 보이고, 포털 잔광이 바닥을 데운다.",
+        left: "작은 식재료가 숨어 있을 법한 길이다. 대신 매복도 쉬워 보인다.",
+        right: "물 냄새가 희미하지만 발소리가 더 크게 울린다."
+      };
+      return mood[kind] || mood.forward;
+    }
+
+    function rollEvent(kind) {
+      const table = window.state.events.table;
+      const total = table.reduce((sum, event) => sum + Number(event.chance), 0);
+      let roll = Math.random() * total;
+      let picked = table[0];
+      for (const event of table) {
+        roll -= Number(event.chance);
+        if (roll <= 0) {
+          picked = event;
+          break;
+        }
+      }
+      window.state.events.current = {
+        ...picked,
+        text: `${picked.text} 선택 경로: ${kindLabel(kind)}`
+      };
+      log("TBD", "ROLL_EVENT", `${picked.type}/${picked.title}, 확률 ${picked.chance}% [TBD]`);
+      if (picked.type === "전투") {
+        window.state.combat.active = true;
+        window.state.combat.enemy = picked.title;
+        window.state.ui.activeGameTab = "map";
+        window.state.combat.log.unshift(`${picked.title}와 전투 돌입`);
+        log("ACTION", "ENTER_COMBAT_TAB", "하단 이동맵 탭이 전투 탭으로 전환");
+      }
+      applyEventReward(picked);
+    }
+
+    function kindLabel(kind) {
+      return { forward: "전진", left: "왼쪽길", right: "오른쪽길" }[kind] || kind;
+    }
+
+    function applyEventReward(event) {
+      const item = randomRewardItem(event.type);
+      window.state.inventory.pendingItems.push(item);
+      if (event.type === "전투") {
+        window.state.survival.fatigue = clamp(window.state.survival.fatigue + 10, 0, maxStat);
+        log("TBD", "COMBAT_FORMULA_USED", "피로도 +10. 공격/회피 공식 [TBD]");
+      }
+      if (event.type === "조우") {
+        window.state.survival.thirst = clamp(window.state.survival.thirst - 10, 0, maxStat);
+        log("TBD", "DIALOG_FORMULA_USED", "갈증 -10. 대화 실패 공식 [TBD]");
+      }
+      if (event.type === "기연") {
+        window.state.survival.hunger = clamp(window.state.survival.hunger - 10, 0, maxStat);
+      }
+      recalcDebuffs();
+      log("ACTION", "GAIN_ITEM", `${item.name} 획득. 배낭에 배치 필요`);
+    }
+
+    function randomRewardItem(type) {
+      const pool = [
+        ["single", "소금 결정", "재료", 14, 96],
+        ["single", "맑은 물병", "소모품", 8, 100],
+        ["domino", "차원 당근", "식재료", 22, 88],
+        ["tri", "버섯 다발", "식재료", 18, 76],
+        ["square", "돌절구", "도구", 16, 100],
+        ["line3", "긴 뿌리채소", "식재료", 20, 82],
+        ["l4", "구부러진 고기", "식재료", 24, 68]
+      ];
+      const weights = [24, 22, 18, 14, 10, 8, 4];
+      let roll = Math.random() * weights.reduce((a, b) => a + b, 0);
+      let chosen = pool[0];
+      for (let i = 0; i < pool.length; i += 1) {
+        roll -= weights[i];
+        if (roll <= 0) {
+          chosen = pool[i];
+          break;
+        }
+      }
+      const [shape, name, itemType, temp, freshness] = chosen;
+      return makeItem(
+        `${type}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        name,
+        itemType,
+        shape,
+        temp,
+        freshness,
+        "등장 확률과 온도 효과는 임시값 [TBD]"
+      );
+    }
+
+    function useSelectedItem() {
+      const item = getSelectedItem();
+      if (!item) {
+        log("ERROR", "NO_ITEM_SELECTED", "사용할 아이템이 없습니다.");
+        render();
+        return;
+      }
+      if (item.type === "소모품" && item.name.includes("물")) {
+        window.state.survival.thirst = clamp(window.state.survival.thirst - 30, 0, maxStat);
+        removeItem(item.id);
+        log("ACTION", "USE_WATER", `${item.name}: 갈증 -30`);
+      } else if (item.type === "식재료") {
+        window.state.survival.hunger = clamp(window.state.survival.hunger - 20, 0, maxStat);
+        removeItem(item.id);
+        log("TBD", "USE_INGREDIENT_RAW", `${item.name}: 허기 -20. 생식 페널티 [TBD]`);
+      } else {
+        log("ERROR", "ITEM_NOT_USABLE", `${item.name}은 현재 직접 사용할 수 없습니다.`);
+      }
+      recalcDebuffs();
+      render();
+    }
+
+    function removeItem(id) {
+      window.state.inventory.pendingItems = window.state.inventory.pendingItems.filter(item => item.id !== id);
+      window.state.inventory.placedItems = window.state.inventory.placedItems.filter(item => item.id !== id);
+      window.state.inventory.selectedItemId = window.state.inventory.pendingItems[0]?.id || window.state.inventory.placedItems[0]?.id || null;
+    }
+
+    function render() {
+      recalcDebuffs();
+      document.getElementById("app").classList.toggle("fullscreen", window.state.ui.fullscreen);
+      document.getElementById("phaseChip").textContent = `${window.state.time.day}일차 ${window.state.time.phase}`;
+      document.getElementById("locationName").textContent = window.state.location.currentNode;
+      document.getElementById("locationMood").textContent = window.state.location.mood;
+      renderHud();
+      renderDebuffs();
+      renderEvent();
+      renderActions();
+      renderInventory();
+      renderCheckpoints();
+      renderBottomTabs();
+      renderGameTabVisibility();
+      renderLogs();
+      renderTabs();
+      renderInspector();
+      renderModal();
+      renderDeath();
+    }
+
+    function renderBottomTabs() {
+      const primary = document.getElementById("primaryGameTab");
+      primary.textContent = window.state.combat.active ? "전투" : "탐사맵";
+      primary.classList.toggle("active", window.state.ui.activeGameTab === "map");
+      document.getElementById("inventoryGameTab").classList.toggle("active", window.state.ui.activeGameTab === "inventory");
+      document.getElementById("infoGameTab").classList.toggle("active", window.state.ui.activeGameTab === "info");
+    }
+
+    function renderGameTabVisibility() {
+      const tab = window.state.ui.activeGameTab;
+      const mapDisplay = tab === "map" ? "" : "none";
+      document.getElementById("scenePanel").style.display = mapDisplay;
+      document.getElementById("eventPanelCard").style.display = mapDisplay;
+      document.getElementById("actionPanelCard").style.display = mapDisplay;
+      document.getElementById("inventoryCard").style.display = tab === "inventory" ? "" : "none";
+      document.getElementById("infoCard").style.display = tab === "info" ? "" : "none";
+    }
+
+    function renderHud() {
+      const stats = [
+        ["행동력", window.state.time.actionPoints, window.state.time.maxActionPoints, "ap"],
+        ["허기", window.state.survival.hunger, maxStat, "hunger"],
+        ["갈증", window.state.survival.thirst, maxStat, "thirst"],
+        ["피로도", window.state.survival.fatigue, maxStat, "fatigue"]
+      ];
+      document.getElementById("survivalHud").innerHTML = stats.map(([label, value, max, key]) => {
+        const ratio = Math.round((value / max) * 100);
+        const dangerClass = key !== "ap" && value >= dangerLine ? "danger" : key !== "ap" && value >= 45 ? "warn" : "";
+        return `
+          <div class="meter">
+            <div class="meter-head"><span>${label}</span><span>${value}/${max}</span></div>
+            <div class="bar"><div class="bar-fill ${dangerClass}" style="width:${ratio}%"></div></div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderDebuffs() {
+      const debuffs = window.state.survival.debuffs;
+      document.getElementById("debuffBadges").innerHTML = debuffs.length
+        ? debuffs.map(name => `<span class="danger-badge">${name}</span>`).join("")
+        : `<span class="tag">상태 안정</span>`;
+    }
+
+    function renderCheckpoints() {
+      document.getElementById("checkpointList").innerHTML = window.state.tower.checkpoints.map(point => `
+        <div class="checkpoint ${point.found ? "found" : ""}">
+          <strong>${point.floor}층</strong>
+          <span>${point.name}<br><small>${point.requirement}</small></span>
+          <span class="${point.found ? "tag" : "tbd-badge"}">${point.found ? "발견" : "미발견"}</span>
+        </div>
+      `).join("") + `
+        <div class="empty">현재 층: ${window.state.tower.floor}층. 왔던 길 표시는 체크포인트 발견 로그로 대체한 임시 구현입니다.</div>
+      `;
+    }
+
+    function renderEvent() {
+      const event = window.state.events.current;
+      const badge = document.getElementById("eventTypeBadge");
+      const eventText = document.getElementById("eventText");
+      const choices = document.getElementById("eventChoices");
+      if (!event) {
+        badge.textContent = "[TBD]";
+        eventText.textContent = "아직 발생한 이벤트가 없다. 전진하거나 갈림길을 선택하면 임시 이벤트 테이블에서 하나를 뽑는다.";
+        choices.innerHTML = `<button type="button" onclick="performAction('forward')">첫 걸음 <span class="action-cost">AP 2</span></button>`;
+        return;
+      }
+      badge.textContent = event.tbd ? `${event.type} [TBD]` : event.type;
+      eventText.textContent = `${event.title}: ${event.text}`;
+      if (window.state.combat.active) {
+        choices.innerHTML = `
+          <button type="button" onclick="resolveCombat('attack')">공격 <span class="action-cost">[TBD]</span></button>
+          <button type="button" onclick="resolveCombat('negotiate')">위협/협상 <span class="action-cost">[TBD]</span></button>
+        `;
+      } else {
+        choices.innerHTML = `
+          <button type="button" onclick="log('ACTION','EVENT_ACCEPT','${safeText(event.title)}'); render();">받아들인다</button>
+          <button type="button" onclick="log('TBD','EVENT_ALT_CHOICE','대체 선택지 결과 [TBD]'); render();">다른 방법</button>
+        `;
+      }
+    }
+
+    function resolveCombat(method) {
+      const label = method === "attack" ? "공격" : "위협/협상";
+      window.state.combat.log.unshift(`${label}으로 전투를 마무리했다. 전투 공식 [TBD]`);
+      window.state.combat.active = false;
+      window.state.combat.enemy = null;
+      window.state.events.current = {
+        type: "전투 종료",
+        title: "짧은 충돌의 끝",
+        text: `${label} 결과로 길이 열렸다. 별도 화면 없이 하단 전투 탭만 탐사맵으로 복귀한다.`,
+        tbd: true
+      };
+      log("TBD", "RESOLVE_COMBAT", `${label}. 공격/회피/대화 공식 [TBD]`);
+      render();
+    }
+
+    function renderActions() {
+      const recipe = currentRecipe();
+      const actions = [
+        ["forward", "전진", 2],
+        ["left", "왼쪽길", 2],
+        ["right", "오른쪽길", 2],
+        ["camp", "야영", 6],
+        ["cook", `요리: ${recipe.name}`, recipe.apCost],
+        ["bag", "가방 정리", 0]
+      ];
+      document.getElementById("actionButtons").innerHTML = actions.map(([kind, label, cost]) => `
+        <button class="action-btn" type="button" onclick="performAction('${kind}')">
+          <span>${label}</span>
+          <span class="action-cost">AP ${cost}${kind === "cook" ? " [TBD]" : ""}</span>
+        </button>
+      `).join("");
+    }
+
+    function renderInventory() {
+      const grid = document.getElementById("inventoryGrid");
+      const cols = window.state.inventory.grid.cols;
+      const rows = window.state.inventory.grid.rows;
+      const selectedId = window.state.inventory.selectedItemId;
+      const occupied = new Map();
+      window.state.inventory.placedItems.forEach(item => {
+        itemCells(item).forEach((cell, index) => {
+          occupied.set(`${cell.x},${cell.y}`, { item, origin: index === 0 });
+        });
+      });
+      let html = "";
+      for (let y = 0; y < rows; y += 1) {
+        for (let x = 0; x < cols; x += 1) {
+          const data = occupied.get(`${x},${y}`);
+          const classes = ["cell"];
+          if (data) classes.push("occupied");
+          if (data?.origin) classes.push("origin");
+          if (data?.item.id === selectedId) classes.push("selected");
+          html += `<button type="button" class="${classes.join(" ")}" data-x="${x}" data-y="${y}" data-label="${data?.origin ? shortName(data.item.name) : ""}" aria-label="배낭 ${x + 1}, ${y + 1}"></button>`;
+        }
+      }
+      grid.innerHTML = html;
+      grid.querySelectorAll(".cell").forEach(cell => {
+        cell.addEventListener("click", () => placeSelectedItem(Number(cell.dataset.x), Number(cell.dataset.y)));
+      });
+
+      const pending = document.getElementById("pendingItems");
+      if (!window.state.inventory.pendingItems.length) {
+        pending.innerHTML = `<div class="empty">미배치 아이템 없음. 탐사 이벤트로 획득품을 얻을 수 있다.</div>`;
+        renderRotationPreview();
+        return;
+      }
+      pending.innerHTML = window.state.inventory.pendingItems.map(item => `
+        <button type="button" class="item-chip ${item.id === selectedId ? "active" : ""}" data-id="${item.id}">
+          <strong>${item.name}</strong>
+          <span>${shapeLibrary[item.shape].length}칸 · ${item.rotation}도 · 신선도 ${item.freshness}</span>
+        </button>
+      `).join("");
+      pending.querySelectorAll(".item-chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+          window.state.inventory.selectedItemId = chip.dataset.id;
+          log("ACTION", "SELECT_PENDING_ITEM", getSelectedItem()?.name || chip.dataset.id);
+          render();
+        });
+      });
+      renderRotationPreview();
+    }
+
+    function renderRotationPreview() {
+      const preview = document.getElementById("rotationPreview");
+      const item = getSelectedItem();
+      if (!item) {
+        preview.innerHTML = "";
+        return;
+      }
+      const cells = new Set(rotatedShape(item.shape, item.rotation).map(([x, y]) => `${x},${y}`));
+      let html = "";
+      for (let y = 0; y < 4; y += 1) {
+        for (let x = 0; x < 4; x += 1) {
+          html += `<span class="${cells.has(`${x},${y}`) ? "on" : ""}"></span>`;
+        }
+      }
+      preview.innerHTML = html;
+    }
+
+    function renderLogs() {
+      const list = document.getElementById("logList");
+      if (!window.state.ui.logs.length) {
+        list.innerHTML = `<div class="empty">아직 로그가 없습니다. 행동 버튼을 누르면 기록됩니다.</div>`;
+        return;
+      }
+      list.innerHTML = window.state.ui.logs.map(entry => `
+        <div class="log-entry ${entry.type}">
+          <span class="meta">[${entry.time}] [${entry.type}] ${entry.eventName}</span>
+          <span>${entry.payload}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderTabs() {
+      const tabs = [
+        ["status", "수치"],
+        ["event", "이벤트"],
+        ["item", "아이템"],
+        ["table", "테이블"]
+      ];
+      document.getElementById("tabs").innerHTML = tabs.map(([id, label]) => `
+        <button type="button" class="tab ${window.state.ui.selectedInspectorTab === id ? "active" : ""}" data-tab="${id}">${label}</button>
+      `).join("");
+      document.querySelectorAll(".tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          window.state.ui.selectedInspectorTab = tab.dataset.tab;
+          log("ACTION", "SWITCH_INSPECTOR_TAB", tab.textContent);
+          render();
+        });
+      });
+    }
+
+    function renderInspector() {
+      const body = document.getElementById("inspectorBody");
+      const tab = window.state.ui.selectedInspectorTab;
+      if (tab === "status") body.innerHTML = statusInspector();
+      if (tab === "event") body.innerHTML = eventInspector();
+      if (tab === "item") body.innerHTML = itemInspector();
+      if (tab === "table") body.innerHTML = tableInspector();
+      bindInspectorInputs();
+    }
+
+    function statusInspector() {
+      return `
+        <div class="form-grid">
+          ${numberField("survival.hunger", "허기", window.state.survival.hunger)}
+          ${numberField("survival.thirst", "갈증", window.state.survival.thirst)}
+          ${numberField("survival.fatigue", "피로도", window.state.survival.fatigue)}
+          ${numberField("time.actionPoints", "행동력", window.state.time.actionPoints)}
+          ${numberField("survival.hungerDangerTurns", "허기 위험 지속 턴", window.state.survival.hungerDangerTurns)}
+          ${numberField("survival.thirstDangerTurns", "갈증 위험 지속 턴", window.state.survival.thirstDangerTurns)}
+          <button type="button" onclick="useSelectedItem()">선택 아이템 사용</button>
+          <div class="empty">위험 임계값 60, 최대치 100. 위험 도달 턴을 1턴째로 계산합니다. 허기 12턴, 갈증 8턴 경과 시 사망.</div>
+        </div>
+      `;
+    }
+
+    function eventInspector() {
+      const event = window.state.events.current;
+      if (!event) return `<div class="empty">현재 이벤트가 없습니다. 탐사 행동을 선택하세요.</div>`;
+      return `
+        <div class="form-grid">
+          ${textField("events.current.title", "이벤트 제목", event.title)}
+          ${textField("events.current.type", "타입", event.type)}
+          ${textareaField("events.current.text", "본문", event.text)}
+          ${textField("events.current.reward", "보상/손실", event.reward || "[TBD]")}
+          <div class="empty">현재 이벤트 확률과 보상 범위는 임시값 [TBD]입니다.</div>
+        </div>
+      `;
+    }
+
+    function itemInspector() {
+      const item = getSelectedItem();
+      if (!item) return `<div class="empty">선택된 아이템이 없습니다. 미배치 아이템 또는 배낭 칸을 선택하세요.</div>`;
+      return `
+        <div class="form-grid">
+          ${textField(`item.${item.id}.name`, "이름", item.name)}
+          ${textField(`item.${item.id}.type`, "타입", item.type)}
+          <div class="field">
+            <label>모양</label>
+            <select data-path="item.${item.id}.shape">
+              ${Object.keys(shapeLibrary).map(shape => `<option value="${shape}" ${shape === item.shape ? "selected" : ""}>${shape} (${shapeLibrary[shape].length}칸)</option>`).join("")}
+            </select>
+          </div>
+          ${numberField(`item.${item.id}.rotation`, "회전 각도", item.rotation)}
+          ${numberField(`item.${item.id}.temp`, "온도", item.temp)}
+          ${numberField(`item.${item.id}.freshness`, "신선도", item.freshness)}
+          ${textareaField(`item.${item.id}.note`, "메모", item.note)}
+          <button type="button" onclick="rotateSelectedItem()">90도 회전</button>
+          <button type="button" onclick="removeItem('${item.id}'); log('ACTION','REMOVE_ITEM','${safeText(item.name)} 제거'); render();">아이템 제거</button>
+          <div class="empty">신선도 UI는 노출합니다. 온도, 부패, 시너지 공식은 후순위 [TBD]입니다.</div>
+        </div>
+      `;
+    }
+
+    function tableInspector() {
+      return `
+        <div class="table-list">
+          ${window.state.events.table.map((event, index) => `
+            <section class="event-row">
+              <header>
+                <span>${event.type}</span>
+                <span class="tbd-badge">${event.chance}% [TBD]</span>
+              </header>
+              ${textField(`events.table.${index}.title`, "제목", event.title)}
+              ${numberField(`events.table.${index}.chance`, "임시 확률", event.chance)}
+              ${textareaField(`events.table.${index}.text`, "본문", event.text)}
+              ${textField(`events.table.${index}.reward`, "보상/손실", event.reward)}
+            </section>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function numberField(path, label, value) {
+      return `
+        <div class="field">
+          <label>${label}</label>
+          <input type="number" min="0" max="100" value="${value}" data-path="${path}">
+        </div>
+      `;
+    }
+
+    function textField(path, label, value) {
+      return `
+        <div class="field">
+          <label>${label}</label>
+          <input type="text" value="${escapeAttr(value || "")}" data-path="${path}">
+        </div>
+      `;
+    }
+
+    function textareaField(path, label, value) {
+      return `
+        <div class="field">
+          <label>${label}</label>
+          <textarea data-path="${path}">${escapeHtml(value || "")}</textarea>
+        </div>
+      `;
+    }
+
+    function bindInspectorInputs() {
+      document.querySelectorAll("[data-path]").forEach(input => {
+        input.addEventListener("change", () => updatePath(input.dataset.path, input.value, input.type));
+        input.addEventListener("input", () => {
+          if (input.tagName === "TEXTAREA" || input.type === "text") updatePath(input.dataset.path, input.value, input.type, true);
+        });
+      });
+    }
+
+    function updatePath(path, value, inputType, quiet = false) {
+      if (path.startsWith("item.")) {
+        const [, id, field] = path.split(".");
+        const item = getAllItems().find(target => target.id === id);
+        if (item) {
+          if (field === "rotation") {
+            item.rotation = ((Math.round((Number(value) || 0) / 90) * 90) % 360 + 360) % 360;
+          } else {
+            item[field] = inputType === "number" ? clamp(value, 0, 100) : value;
+          }
+          if (field === "shape" || field === "rotation") {
+            item.x = null;
+            item.y = null;
+            window.state.inventory.placedItems = window.state.inventory.placedItems.filter(target => target.id !== id);
+            if (!window.state.inventory.pendingItems.some(target => target.id === id)) window.state.inventory.pendingItems.push(item);
+            log("ACTION", "ITEM_SHAPE_ROTATION_CHANGED", "모양/회전 변경 후 재배치 필요");
+          }
+        }
+      } else {
+        const parts = path.split(".");
+        let target = window.state;
+        for (let i = 0; i < parts.length - 1; i += 1) target = target[parts[i]];
+        const key = parts[parts.length - 1];
+        target[key] = inputType === "number" ? clamp(value, 0, key === "chance" ? 100 : maxStat) : value;
+      }
+      recalcDebuffs();
+      if (!quiet) log("ACTION", "INSPECTOR_EDIT", `${path} = ${value}`);
+      render();
+    }
+
+    function renderModal() {
+      document.getElementById("tbdModal").classList.toggle("open", window.state.ui.modalOpen);
+    }
+
+    function renderDeath() {
+      const overlay = document.getElementById("deathOverlay");
+      overlay.classList.toggle("show", Boolean(window.state.ui.death));
+      document.getElementById("deathReason").textContent = window.state.ui.death || "";
+    }
+
+    function safeText(text) {
+      return String(text).replace(/'/g, "\\'");
+    }
+
+    function shortName(name) {
+      return name.length > 4 ? `${name.slice(0, 4)}` : name;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value).replaceAll('"', "&quot;");
+    }
+
+    document.getElementById("toggleFullscreen").addEventListener("click", () => {
+      window.state.ui.fullscreen = !window.state.ui.fullscreen;
+      log("ACTION", "TOGGLE_FULLSCREEN", window.state.ui.fullscreen ? "플레이 화면만 표시" : "에디터 패널 표시");
+      render();
+    });
+
+    document.getElementById("primaryGameTab").addEventListener("click", () => {
+      window.state.ui.activeGameTab = "map";
+      log("ACTION", "SWITCH_GAME_TAB", window.state.combat.active ? "전투 탭" : "탐사맵 탭");
+      render();
+    });
+
+    document.getElementById("inventoryGameTab").addEventListener("click", () => {
+      window.state.ui.activeGameTab = "inventory";
+      log("ACTION", "SWITCH_GAME_TAB", "인벤토리 탭");
+      render();
+    });
+
+    document.getElementById("infoGameTab").addEventListener("click", () => {
+      window.state.ui.activeGameTab = "info";
+      log("ACTION", "SWITCH_GAME_TAB", "정보 탭");
+      render();
+    });
+
+    document.getElementById("showTbd").addEventListener("click", () => {
+      window.state.ui.modalOpen = true;
+      log("ACTION", "OPEN_TBD_MODAL", "미확정 기획 항목 확인");
+      render();
+    });
+
+    document.getElementById("closeTbd").addEventListener("click", () => {
+      window.state.ui.modalOpen = false;
+      render();
+    });
+
+    document.getElementById("advancePhase").addEventListener("click", () => advancePhase("플레이어가 턴 넘기기 선택"));
+
+    document.getElementById("clearLogs").addEventListener("click", () => {
+      window.state.ui.logs = [];
+      render();
+    });
+
+    document.getElementById("resetGame").addEventListener("click", () => {
+      window.state = makeInitialState();
+      log("ACTION", "RESET_GAME", "초기 상태로 복귀");
+      render();
+    });
+
+    log("TBD", "PROTOTYPE_READY", "이벤트/전투/요리/배낭 확률은 임시값 [TBD]");
+    render();
+  </script>
+</body>
+</html>
