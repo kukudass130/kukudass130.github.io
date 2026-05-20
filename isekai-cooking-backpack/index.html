@@ -314,6 +314,10 @@
       grid-row: 4;
     }
 
+    #infoCard .card-title {
+      display: none;
+    }
+
     .scene {
       min-height: 0;
       height: 100%;
@@ -458,7 +462,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      font-size: 10px;
+      font-size: 8px;
       font-weight: 900;
       color: #2a1c12;
       overflow: hidden;
@@ -487,6 +491,9 @@
       min-width: 0;
       padding: 4px;
       cursor: pointer;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     .item-chip.active {
@@ -498,9 +505,13 @@
       display: block;
       font-size: 10px;
       margin-bottom: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .item-chip span {
+      display: none;
       font-size: 9px;
       color: var(--muted);
     }
@@ -528,19 +539,25 @@
     .checkpoint-list {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
+      gap: 4px;
     }
 
     .checkpoint {
       display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 5px;
+      grid-template-columns: auto 1fr;
+      gap: 4px;
       align-items: center;
       border: 2px solid var(--line);
       border-radius: 7px;
       background: #fff6dc;
       padding: 4px;
       font-size: 9px;
+      line-height: 1.1;
+    }
+
+    .checkpoint .tag,
+    .checkpoint .tbd-badge {
+      display: none;
     }
 
     .checkpoint small {
