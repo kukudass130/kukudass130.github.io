@@ -278,13 +278,45 @@
       min-height: 0;
       overflow: hidden;
       padding: 5px;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 44px 64px 120px 42px;
       gap: 5px;
     }
 
+    #scenePanel {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    #eventPanelCard {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    #actionPanelCard {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    #cookingCard {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    #inventoryCard {
+      grid-column: 1 / -1;
+      grid-row: 3;
+    }
+
+    #infoCard {
+      grid-column: 1 / -1;
+      grid-row: 4;
+    }
+
     .scene {
-      min-height: 58px;
+      min-height: 0;
+      height: 100%;
       border: 3px solid var(--line);
       border-radius: 8px;
       background:
@@ -341,6 +373,8 @@
       border-radius: 8px;
       background: var(--panel);
       padding: 5px;
+      min-height: 0;
+      overflow: hidden;
     }
 
     .card-title {
@@ -369,9 +403,9 @@
     }
 
     .action-btn {
-      min-height: 26px;
+      min-height: 22px;
       padding: 4px;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 900;
       display: flex;
       align-items: center;
@@ -493,6 +527,7 @@
 
     .checkpoint-list {
       display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 6px;
     }
 
@@ -505,7 +540,11 @@
       border-radius: 7px;
       background: #fff6dc;
       padding: 4px;
-      font-size: 10px;
+      font-size: 9px;
+    }
+
+    .checkpoint small {
+      display: none;
     }
 
     .checkpoint.found {
@@ -530,7 +569,7 @@
     .cook-list {
       display: grid;
       gap: 3px;
-      max-height: 62px;
+      max-height: 44px;
       overflow: hidden;
     }
 
