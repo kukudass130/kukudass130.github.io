@@ -853,7 +853,6 @@
               <span id="eventTypeBadge" class="tbd-badge">[TBD]</span>
             </div>
             <p id="eventText" class="event-text"></p>
-            <div id="eventChoices" class="actions"></div>
           </article>
 
           <article class="card" id="actionPanelCard">
@@ -1425,7 +1424,8 @@
       }
       window.state.events.current = {
         ...picked,
-        text: `${picked.text} 선택 경로: ${kindLabel(kind)}`
+        text: `${picked.text} 선택 경로: ${kindLabel(kind)}`,
+        resolved: false
       };
       log("TBD", "ROLL_EVENT", `${picked.type}/${picked.title}, 확률 ${picked.chance}% [TBD]`);
       if (picked.type === "전투") {
@@ -1435,7 +1435,6 @@
         window.state.combat.log.unshift(`${picked.title}와 전투 돌입`);
         log("ACTION", "ENTER_COMBAT_TAB", "하단 이동맵 탭이 전투 탭으로 전환");
       }
-      applyEventReward(picked);
     }
 
     function kindLabel(kind) {
@@ -1458,6 +1457,87 @@
       }
       recalcDebuffs();
       log("ACTION", "GAIN_ITEM", `${item.name} 획득. 배낭에 배치 필요`);
+    }
+
+    function applyEventAction(actionId) {
+      const event = window.state.events.current;
+      if (!event || event.resolved) {
+        log("ERROR", "NO_ACTIVE_EVENT", "처리할 이벤트가 없습니다.");
+        render();
+        return;
+      }
+      const action = eventActionsFor(event).find(candidate => candidate.id === actionId);
+      if (!action) {
+        log("ERROR", "UNKNOWN_EVENT_ACTION", actionId);
+        render();
+        return;
+      }
+      if (!spendAction(action.cost, action.label)) return;
+
+      if (event.type === "전투") {
+        resolveCombat(actionId);
+      } else {
+        resolveNonCombatEvent(event, action);
+      }
+    }
+
+    function resolveNonCombatEvent(event, action) {
+      const resultText = `${action.label} 선택. ${event.type} 결과 공식은 임시값 [TBD].`;
+      if (event.type === "발견") {
+        applyEventReward(event);
+      } else if (event.type === "조우") {
+        if (action.id === "trade") {
+          window.state.survival.thirst = clamp(window.state.survival.thirst - 15, 0, maxStat);
+          log("TBD", "ENCOUNTER_TRADE", "거래 결과: 갈증 -15. 가격/협상 공식 [TBD]");
+        } else if (action.id === "talk") {
+          log("TBD", "ENCOUNTER_TALK", "정보 획득. 대화 누락 공식 [TBD]");
+        } else {
+          window.state.survival.fatigue = clamp(window.state.survival.fatigue + 5, 0, maxStat);
+          log("ACTION", "ENCOUNTER_LEAVE", "충돌을 피하고 지나감. 피로도 +5");
+        }
+      } else if (event.type === "기연") {
+        if (action.id === "collect") applyEventReward(event);
+        if (action.id === "inspect") {
+          window.state.survival.hunger = clamp(window.state.survival.hunger - 10, 0, maxStat);
+          log("TBD", "FORTUNE_INSPECT", "기연 조사: 허기 -10. 특수 조건 [TBD]");
+        }
+        if (action.id === "pray") {
+          window.state.survival.fatigue = clamp(window.state.survival.fatigue - 15, 0, maxStat);
+          log("TBD", "FORTUNE_PRAY", "전송석에 기원: 피로도 -15. 신앙/기연 공식 [TBD]");
+        }
+      }
+      event.resolved = true;
+      event.text = `${event.text} ${resultText}`;
+      recalcDebuffs();
+      log("ACTION", "RESOLVE_EVENT_ACTION", `${event.type}: ${action.label}`);
+      render();
+    }
+
+    function eventActionsFor(event) {
+      if (!event || event.resolved) return null;
+      const sets = {
+        "전투": [
+          { id: "attack", label: "공격", cost: 2 },
+          { id: "negotiate", label: "위협/협상", cost: 1 },
+          { id: "retreat", label: "도주", cost: 2 }
+        ],
+        "조우": [
+          { id: "talk", label: "대화", cost: 1 },
+          { id: "trade", label: "거래", cost: 1 },
+          { id: "leave", label: "지나가기", cost: 1 }
+        ],
+        "기연": [
+          { id: "inspect", label: "조사", cost: 1 },
+          { id: "pray", label: "기원", cost: 1 },
+          { id: "collect", label: "수집", cost: 2 }
+        ],
+        "발견": [
+          { id: "search", label: "수색", cost: 1 },
+          { id: "collect", label: "챙기기", cost: 1 },
+          { id: "mark", label: "표식", cost: 1 }
+        ]
+      };
+      return sets[event.type] || null;
     }
 
     function randomRewardItem(type) {
@@ -1601,31 +1681,26 @@
       const event = window.state.events.current;
       const badge = document.getElementById("eventTypeBadge");
       const eventText = document.getElementById("eventText");
-      const choices = document.getElementById("eventChoices");
       if (!event) {
         badge.textContent = "[TBD]";
-        eventText.textContent = "아직 발생한 이벤트가 없다. 전진하거나 갈림길을 선택하면 임시 이벤트 테이블에서 하나를 뽑는다.";
-        choices.innerHTML = `<button type="button" onclick="performAction('forward')">첫 걸음 <span class="action-cost">AP 2</span></button>`;
+        eventText.textContent = "아직 발생한 이벤트가 없다. 전진하거나 갈림길을 선택하면 행동 선택이 이벤트 대응 버튼으로 바뀐다.";
         return;
       }
-      badge.textContent = event.tbd ? `${event.type} [TBD]` : event.type;
+      const stateLabel = event.resolved ? "해결" : "대응";
+      badge.textContent = event.tbd ? `${event.type} ${stateLabel} [TBD]` : `${event.type} ${stateLabel}`;
       eventText.textContent = `${event.title}: ${event.text}`;
-      if (window.state.combat.active) {
-        choices.innerHTML = `
-          <button type="button" onclick="resolveCombat('attack')">공격 <span class="action-cost">[TBD]</span></button>
-          <button type="button" onclick="resolveCombat('negotiate')">위협/협상 <span class="action-cost">[TBD]</span></button>
-        `;
-      } else {
-        choices.innerHTML = `
-          <button type="button" onclick="log('ACTION','EVENT_ACCEPT','${safeText(event.title)}'); render();">받아들인다</button>
-          <button type="button" onclick="log('TBD','EVENT_ALT_CHOICE','대체 선택지 결과 [TBD]'); render();">다른 방법</button>
-        `;
-      }
     }
 
     function resolveCombat(method) {
-      const label = method === "attack" ? "공격" : "위협/협상";
+      const label = method === "attack" ? "공격" : method === "negotiate" ? "위협/협상" : "도주";
+      const event = window.state.events.current;
       window.state.combat.log.unshift(`${label}으로 전투를 마무리했다. 전투 공식 [TBD]`);
+      if (method === "retreat") {
+        window.state.survival.fatigue = clamp(window.state.survival.fatigue + 15, 0, maxStat);
+        log("TBD", "COMBAT_RETREAT", "도주: 피로도 +15. 추격/손실 공식 [TBD]");
+      } else if (event) {
+        applyEventReward(event);
+      }
       window.state.combat.active = false;
       window.state.combat.enemy = null;
       window.state.events.current = {
@@ -1639,6 +1714,16 @@
     }
 
     function renderActions() {
+      const eventActions = eventActionsFor(window.state.events.current);
+      if (eventActions) {
+        document.getElementById("actionButtons").innerHTML = eventActions.map(action => `
+          <button class="action-btn" type="button" onclick="applyEventAction('${action.id}')">
+            <span>${action.label}</span>
+            <span class="action-cost">AP ${action.cost}</span>
+          </button>
+        `).join("");
+        return;
+      }
       const actions = [
         ["forward", "전진", 2],
         ["left", "왼쪽길", 2],
